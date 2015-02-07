@@ -14,7 +14,7 @@ namespace DD.CiBuildLight.Netduino.IO
             try
             {
                 var request =
-                    (HttpWebRequest) WebRequest.Create("http://okcsharpbuildwebapi.azurewebsites.net/api/buildstatus");
+                    (HttpWebRequest)WebRequest.Create("http://ddcibuildlightweb.azurewebsites.net/api/BuildStatus");
 
                 request.Accept = "application/json";
                 using (var response = (HttpWebResponse) request.GetResponse())

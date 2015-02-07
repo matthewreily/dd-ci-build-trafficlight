@@ -1,29 +1,21 @@
-﻿using System;
-using System.IO.Ports;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
+﻿using System.Threading;
 using DD.CiBuildLight.Netduino.IO;
 using DD.CiBuildLight.Netduino.Model;
-using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
-using SecretLabs.NETMF.Hardware;
 using SecretLabs.NETMF.Hardware.Netduino;
 
 namespace DD.CiBuildLight.Netduino
 {
     public class Program
     {
-        #region Public Methods
+        
+        private static BuildStatus _status;
+        private const bool Off = true;
+        private const bool On = false;
 
-        public static void Main()
-        {
-            AllOff();
-            StartUp();
-            _timer = new Timer(CheckBuildStatus, null, 0, 10*1000);
-
-            Thread.Sleep(Timeout.Infinite);
-        }
+        private static readonly OutputPort RedlightRelayPort;
+        private static readonly OutputPort YellowlightRelayPort;
+        private static readonly OutputPort GreenlightRelayPort;
 
         static Program()
         {
@@ -31,43 +23,13 @@ namespace DD.CiBuildLight.Netduino
             YellowlightRelayPort = new OutputPort(Pins.GPIO_PIN_D3, Off);
             RedlightRelayPort = new OutputPort(Pins.GPIO_PIN_D4, Off);
         }
-
         
-
-        
-
-        private static Timer _timer;
-        private static BuildStatus _status;
-        private const bool Off = true;
-        private const bool On = false;
-
-        private static OutputPort RedlightRelayPort { get; set; }
-
-        private static OutputPort YellowlightRelayPort { get; set; }
-
-        private static OutputPort GreenlightRelayPort { get; set; }
-
-        #endregion Private Fields
-
-        #region Private Methods
-
-        private static void AllOff()
+        public static void Main()
         {
-            RedlightRelayPort.Write(Off);
-            GreenlightRelayPort.Write(Off);
-            YellowlightRelayPort.Write(Off);
-        }
-
-        private static void BuildFail()
-        {
-            AllOff();
-            RedlightRelayPort.Write(On);
-        }
-
-        private static void BuildSuccess()
-        {
-            AllOff();
-            GreenlightRelayPort.Write(On);
+            All(Off);
+            StartUp();
+            var timer = new Timer(CheckBuildStatus, null, 0, 10*1000);
+            Thread.Sleep(Timeout.Infinite);
         }
 
         private static void CheckBuildStatus(object state)
@@ -88,31 +50,40 @@ namespace DD.CiBuildLight.Netduino
             }
         }
 
+        private static void All(bool onOrOff)
+        {
+            RedlightRelayPort.Write(onOrOff);
+            GreenlightRelayPort.Write(onOrOff);
+            YellowlightRelayPort.Write(onOrOff);
+        }
+
+        private static void BuildFail()
+        {
+            All(Off);
+            RedlightRelayPort.Write(On);
+        }
+
+        private static void BuildSuccess()
+        {
+            All(Off);
+            GreenlightRelayPort.Write(On);
+        }
         private static void CommunicationError()
         {
-            AllOff();
+            All(Off);
             YellowlightRelayPort.Write(On);
         }
 
         private static void StartUp()
         {
-            AllOff();
+            All(Off);
             for (var i = 0; i < 5; i++)
             {
-                AllOn();
+                All(On);
                 Thread.Sleep(1000);
-                AllOff();
+                All(Off);
                 Thread.Sleep(1000);
             }
         }
-
-        private static void AllOn()
-        {
-            RedlightRelayPort.Write(On);
-            GreenlightRelayPort.Write(On);
-            YellowlightRelayPort.Write(On);
-        }
-
-        #endregion
     }
 }
